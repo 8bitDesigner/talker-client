@@ -1,0 +1,12 @@
+{
+  "name": "talker-client",
+  "version": "0.0.0",
+  "description": "A client for the Talker chat service",
+  "main": "index.js",
+  "repository": "git@github.com:8bitDesigner/talker-client.git",
+  "author": "Paul Sweeney <paul@8-bitdesign.com>",
+  "license": "BSD",
+  "dependencies": {
+    "deep-extend": "~0.2.5"
+  }
+}
