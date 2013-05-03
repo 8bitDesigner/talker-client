@@ -7,6 +7,7 @@
   "author": "Paul Sweeney <paul@8-bitdesign.com>",
   "license": "BSD",
   "dependencies": {
-    "deep-extend": "~0.2.5"
+    "deep-extend": "~0.2.5",
+    "coffee-script": "~1.6.2"
   }
 }
