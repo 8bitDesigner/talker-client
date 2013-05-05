@@ -1,4 +1,6 @@
 tls     = require("tls")
+request = require("request")
+async   = require("async")
 extend  = require("deep-extend")
 Emitter = require("events").EventEmitter
 
@@ -6,6 +8,31 @@ module.exports = class TalkerClient extends Emitter
   constructor: (options = {}) ->
     @options = options
     @rooms = {}
+
+  get: (path, cb) ->
+    options =
+      url: "https://#{@options.account}.talkerapp.com/#{path}"
+      headers:
+        "Accept": "application/json"
+        "Content-Type": "application/json"
+        "X-Talker-Token": @options.token
+    request.get options, (err, res, body) ->
+      json = {}
+      try
+        json = JSON.parse(body)
+      catch e
+        err = e
+      cb(err, json)
+
+  getRooms: (cb) ->
+    @get "rooms.json", (err, rooms) =>
+      if (err) then return cb(err, [])
+      funcs = []
+      funcs.push (cb) => @get("rooms/#{room.id}.json", cb) for room in rooms
+      async.parallel funcs, (err, results) ->
+        unless err
+          results.forEach (result, index) -> rooms[index].users = result.users
+        cb(err, rooms)
 
   join: (room) ->
     connector = new Room(extend(@options, {room: room}))
@@ -17,7 +44,7 @@ module.exports = class TalkerClient extends Emitter
     events = ["connect", "message", "join", "users", "idle", "back", "leave"]
 
     # Repeat room events up to the client object
-    repeater = (event, ns) => (payload) => @emit("#{ns}:#{event}", payload)
+    repeater = (event, ns) => (payload) => @emit(event, ns, payload)
     room.on event, repeater(event, ns) for event in events
 
     # Toss the reference to the room object when you close it
