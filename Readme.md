@@ -20,19 +20,19 @@ client.getRooms(function(err, rooms) {
 })
 ```
 
-## API Docs
+# API Docs
 
-### Class: `Talker`
+## Class: `Talker`
 Usage:
 ``` javascript
 var client = new Talker({ account: 'your account', token: 'your token' })
 ```
 
-__`account`__: This is your Talker subdomain (eg: `[youraccount].talker.com` )
-__`token`__: Your account token, you can find this by going to [http://talkerapp.com/settings](http://talkerapp.com/settings)
+`account` is your Talker subdomain (eg: `[youraccount].talker.com` )  
+`token` is account token, you can find this by going to [http://talkerapp.com/settings](http://talkerapp.com/settings)
 
-#### Methods
-##### `getRooms(callback)`
+### Methods
+#### `getRooms(callback)`
 Returns a list of rooms, and the list of users for each room:
 
 ``` json
@@ -48,11 +48,11 @@ Returns a list of rooms, and the list of users for each room:
 ]
 ```
 
-##### `join(roomId)`
+#### `join(roomId)`
 Return an instance of the `Room` class.
 
-#### Properties
-##### `rooms`
+### Properties
+#### `rooms`
 `rooms` is a key/value hash of room IDs to their connected room instaces. eg:
 
 ``` javascript
@@ -62,7 +62,7 @@ client.room[1234].send('Oh hai')
 ```
 
 
-#### Events
+### Events
 All `Room` events are emitted on the client directly, with the first parameter
 being the room ID and the second being the event payload:
 
@@ -74,25 +74,25 @@ client.on('message', function(1234, message) { ... })
 room.on('message', function(message) { ... })
 ```
 
-### Class: `Room`
+## Class: `Room`
 Created by calling `join` on a Talker client instance
 
-#### Methods
-##### `mesasge(content [, to])`
+### Methods
+#### `mesasge(content [, to])`
 Sends a mesasge to the room. Specifying a user ID as the second parameter will
 send a private message to that user.
 
-##### `leave()`
+#### `leave()`
 Leaves a room.
 
-#### Events
-##### `connect`
+### Events
+#### `connect`
 Emitted when you've connected to the Talker Room
 
-##### `error`
+#### `error`
 Emitted whenever the client encounters an error from Talker
 
-##### `message`
+#### `message`
 Emitted when a user in the talker room sends a message:
 
 ``` json
@@ -104,7 +104,7 @@ Emitted when a user in the talker room sends a message:
 }
 ```
 
-##### `join`
+#### `join`
 Emitted when a new user joins the room
 
 ``` json
@@ -115,7 +115,7 @@ Emitted when a new user joins the room
 }
 ```
 
-##### `users`
+#### `users`
 Emitted when you join a room, the payload is a list of all the users currently
 in the room:
 
@@ -128,7 +128,7 @@ in the room:
 }
 ```
 
-##### `idle`
+#### `idle`
 Emitted when a user in the room goes idle
 
 ```json
@@ -139,7 +139,7 @@ Emitted when a user in the room goes idle
 }
 ```
 
-##### `back`
+#### `back`
 Emitted when a user in the room returns from being idle
 
 ```json
@@ -151,7 +151,7 @@ Emitted when a user in the room returns from being idle
 ```
 
 
-##### `leave`
+#### `leave`
 Emitted when a user leaves the room
 
 ```json
