@@ -75,9 +75,7 @@ class Room extends Emitter
     # Bind events
     @socket.on "close", => @destroy()
 
-    @socket.on "connect", =>
-      console.log('socket connected')
-      @emit "connect"
+    @socket.on "connect", => @emit "connect"
 
     @socket.on "timeout", =>
       err = new Error("Socket timeout")
