@@ -52,18 +52,42 @@ module.exports = class TalkerClient extends Emitter
 
 class Room extends Emitter
   constructor: (options = {}) ->
-    host    = options.host or "talkerapp.com"
-    port    = options.port or 8500
-    timeout = options.timeout or 25000
-    room    = options.room
-    token   = options.token
+    @host    = options.host or "talkerapp.com"
+    @port    = options.port or 8500
+    @timeout = options.timeout or 5000
+    @room    = options.room
+    @token   = options.token
 
-    @socket = tls.connect port, host, {rejectUnauthorized: false}, =>
-      @send("connect", {"room": room, "token": token})
-      @emit "connect"
-      @pinger = setInterval(@ping.bind(@), timeout)
+    # Delay setup so our caller can bind handlers before errors start firing
+    process.nextTick => @setup()
 
+  setup: ->
+    # Create socket to Talker service
+    @socket = tls.connect @port, @host, {rejectUnauthorized: false}, =>
+      @send "connect", {"room": @room, "token": @token}
+      @pinger = setInterval(@ping.bind(@), @timeout)
+
+    # Configure socket
     @socket.setEncoding("utf8")
+    @socket.setKeepAlive true
+    @socket.setTimeout 15000
+
+    # Bind events
+    @socket.on "close", => @destroy()
+
+    @socket.on "connect", =>
+      console.log('socket connected')
+      @emit "connect"
+
+    @socket.on "timeout", =>
+      err = new Error("Socket timeout")
+      err.code = 'ETIMEDOUT'
+      @emit "error", err
+      @destroy()
+
+    @socket.on "error", (err) =>
+      @emit "error", err
+      @destroy()
 
     @socket.on "data", (data) =>
       parse = (line) =>
@@ -79,11 +103,14 @@ class Room extends Emitter
       to: to if to
     @send("message", payload)
 
+  destroy: ->
+    clearInterval(@pinger)
+    @removeAllListeners()
+    @socket.destroy()
+
   leave: ->
     @send("close")
-    @emit("close")
-    delete @pinger
-    @socket.destroy()
+    @destroy()
 
   send: (type, message={}) ->
     payload = extend(message, {type: type})
