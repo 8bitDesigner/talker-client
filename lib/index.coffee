@@ -57,35 +57,33 @@ class Room extends Emitter
     @timeout = options.timeout or 5000
     @room    = options.room
     @token   = options.token
+    @setup()
 
-    # Delay setup so our caller can bind handlers before errors start firing
-    process.nextTick => @setup()
+  reconnect: ->
+    @destroy()
+    @setup()
 
   setup: ->
     # Create socket to Talker service
     @socket = tls.connect @port, @host, {rejectUnauthorized: false}, =>
+      @emit "connect"
       @send "connect", {"room": @room, "token": @token}
       @pinger = setInterval(@ping.bind(@), @timeout)
 
     # Configure socket
     @socket.setEncoding("utf8")
     @socket.setKeepAlive true
-    @socket.setTimeout 15000
 
     # Bind events
-    @socket.on "close", => @destroy()
-
-    @socket.on "connect", => @emit "connect"
-
-    @socket.on "timeout", =>
-      err = new Error("Socket timeout")
-      err.code = 'ETIMEDOUT'
-      @emit "error", err
+    @socket.on "close", =>
+      @emit "disconnect"
       @destroy()
 
     @socket.on "error", (err) =>
-      @emit "error", err
-      @destroy()
+      if err.code is 'ECONNRESET' then @reconnect()
+      else
+        @emit "error", err
+        @destroy()
 
     @socket.on "data", (data) =>
       parse = (line) =>
@@ -103,7 +101,6 @@ class Room extends Emitter
 
   destroy: ->
     clearInterval(@pinger)
-    @removeAllListeners()
     @socket.destroy()
 
   leave: ->
