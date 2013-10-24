@@ -36,6 +36,7 @@ module.exports = class TalkerClient extends Emitter
 
   join: (room) ->
     connector = new Room(extend(@options, {room: room}))
+    connector.client = @
     @rooms[room] = connector
     @bind(connector, room)
     return connector
@@ -86,12 +87,23 @@ class Room extends Emitter
         @destroy()
 
     @socket.on "data", (data) =>
-      parse = (line) =>
+      data.split("\n").forEach (line) =>
         return unless line
-        message = JSON.parse(line)
-        message.content = "/me #{message.content}" if message.action
+        message = @normalize JSON.parse(line)
         @emit message.type, message if message
-      parse(line) for line in data.split("\n")
+
+  normalize: (message) =>
+    message.content = "/me #{message.content}" if message.action
+    message.time = new Date(message.time * 1000)
+    delete message.action
+    return message
+
+  getUsers: (cb) ->
+    @client.get "rooms/#{@room}.json", (err, result) -> cb(result.users)
+
+  getEvents: (cb) ->
+    @client.get "rooms/#{@room}.json", (err, result) =>
+      cb result.events.map(@normalize)
 
   ping: -> @send("ping")
 
