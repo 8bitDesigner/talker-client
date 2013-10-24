@@ -87,7 +87,9 @@ class Room extends Emitter
 
     @socket.on "data", (data) =>
       parse = (line) =>
-        message = if line is "" then null else JSON.parse(line)
+        return unless line
+        message = JSON.parse(line)
+        message.content = "/me #{message.content}" if message.action
         @emit message.type, message if message
       parse(line) for line in data.split("\n")
 
@@ -97,6 +99,11 @@ class Room extends Emitter
     payload =
       content: content
       to: to if to
+
+    if content.indexOf('/me') is 0
+      payload.content = content.replace('/me', '')
+      payload.action = true
+
     @send("message", payload)
 
   destroy: ->
