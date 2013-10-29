@@ -103,7 +103,8 @@ class Room extends Emitter
 
   getEvents: (cb) ->
     @client.get "rooms/#{@room}.json", (err, result) =>
-      cb result.events.map(@normalize)
+      truthy = (thing) -> thing?
+      cb result.events.filter(truthy).map(@normalize)
 
   ping: -> @send("ping")
 
